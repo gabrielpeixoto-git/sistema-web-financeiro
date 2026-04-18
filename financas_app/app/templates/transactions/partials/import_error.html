@@ -1,0 +1,12 @@
+<div class="mt-3 rounded border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-100">
+  <div class="font-medium">Não foi possível importar</div>
+  <p class="mt-1">{{ detail }}</p>
+  {% if missing_columns %}
+    <p class="mt-2 text-xs font-medium text-rose-900 dark:text-rose-200">Colunas ausentes:</p>
+    <ul class="mt-1 list-disc pl-5 text-xs">
+      {% for c in missing_columns %}
+        <li><code class="font-mono">{{ c }}</code></li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>

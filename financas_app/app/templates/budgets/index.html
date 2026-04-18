@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Orçamentos | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Orçamentos</h1>
+  <p class="text-sm text-text-secondary">Controle seus gastos por categoria</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <h2 class="text-2xl font-bold text-text-primary">Orçamentos por Categoria</h2>
+      <div class="flex items-center gap-2 text-sm">
+        <a class="btn btn-secondary text-sm px-3 py-1" href="/budgets?year={{ prev_y }}&month={{ prev_m }}">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          Mês anterior
+        </a>
+        <span class="font-semibold text-text-primary px-3 py-1 bg-bg-tertiary rounded-lg">{{ "%04d-%02d"|format(year, month) }}</span>
+        <a class="btn btn-secondary text-sm px-3 py-1" href="/budgets?year={{ next_y }}&month={{ next_m }}">
+          Próximo mês
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </a>
+      </div>
+    </div>
+    <p class="mt-2 text-sm text-text-secondary">
+      Limite de <strong>despesas</strong> (saídas) por categoria no mês de competência.
+    </p>
+  </div>
+
+  {% if error %}
+    <div class="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400 mb-6">
+      <i data-lucide="alert-circle" class="w-4 h-4 inline mr-1"></i>
+      {{ error }}
+    </div>
+  {% endif %}
+
+  <div class="mt-6 grid gap-6 md:grid-cols-2">
+    <form class="card card-hover p-6 space-y-4" method="post" action="/budgets">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+          <i data-lucide="piggy-bank" class="w-4 h-4 text-amber-400"></i>
+        </div>
+        <h3 class="font-semibold text-text-primary">Definir Orçamento</h3>
+      </div>
+      <input type="hidden" name="year" value="{{ year }}" />
+      <input type="hidden" name="month" value="{{ month }}" />
+      <label class="text-sm block">
+        <div class="mb-1 text-text-secondary">Categoria</div>
+        <select name="category_id" class="w-full" required>
+          {% for c in categories %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="text-sm block">
+        <div class="mb-1 text-text-secondary">Limite do mês (ex: 500,00)</div>
+        <input name="amount" required class="w-full" placeholder="R$ 0,00" />
+      </label>
+      <button type="submit" class="btn btn-primary w-full">
+        <i data-lucide="save" class="w-4 h-4"></i>
+        Salvar Orçamento
+      </button>
+    </form>
+
+    <div class="card card-hover p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+          <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-400"></i>
+        </div>
+        <h3 class="font-semibold text-text-primary">Resumo ({{ "%04d-%02d"|format(year, month) }})</h3>
+      </div>
+      {% if rows %}
+        <ul class="space-y-4">
+          {% for r in rows %}
+            <li class="p-4 rounded-xl bg-bg-primary/50">
+              <div class="flex justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                    {{ r.category[:1] | upper }}
+                  </div>
+                  <span class="font-semibold text-text-primary">{{ r.category }}</span>
+                </div>
+                <form method="post" action="/budgets/{{ r.budget_id }}/delete" class="inline" onsubmit="return confirm('Remover este orçamento?');">
+                  <input type="hidden" name="year" value="{{ year }}" />
+                  <input type="hidden" name="month" value="{{ month }}" />
+                  <button type="submit" class="text-xs text-red-400 hover:text-red-300 underline">Remover</button>
+                </form>
+              </div>
+              <div class="mt-2 grid grid-cols-3 gap-2 text-sm mb-3">
+                <div class="text-center p-2 rounded-lg bg-bg-tertiary/50">
+                  <div class="text-xs text-text-muted">Limite</div>
+                  <div class="font-medium text-text-primary">{{ r.limit }}</div>
+                </div>
+                <div class="text-center p-2 rounded-lg bg-bg-tertiary/50">
+                  <div class="text-xs text-text-muted">Gasto</div>
+                  <div class="font-medium {% if r.spent != 'R$ 0,00' %}text-red-400{% else %}text-text-primary{% endif %}">{{ r.spent }}</div>
+                </div>
+                <div class="text-center p-2 rounded-lg bg-bg-tertiary/50">
+                  <div class="text-xs text-text-muted">Restante</div>
+                  <div class="font-medium {% if r.over %}text-red-400{% else %}text-emerald-400{% endif %}">{{ r.remaining }}</div>
+                </div>
+              </div>
+              <div class="h-2 w-full rounded-full bg-bg-tertiary overflow-hidden">
+                <div
+                  class="h-2 rounded-full {% if r.over %}bg-gradient-to-r from-red-500 to-red-400{% else %}bg-gradient-to-r from-emerald-500 to-emerald-400{% endif %} transition-all duration-500 w-[{{ r.bar_pct }}%]"
+                ></div>
+              </div>
+              <div class="mt-1 text-xs text-text-muted text-right">{{ r.pct }}% do limite</div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="text-center py-8">
+          <div class="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="piggy-bank" class="w-6 h-6 text-text-muted"></i>
+          </div>
+          <p class="text-sm text-text-secondary">Nenhum orçamento neste mês.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

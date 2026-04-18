@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Senha | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Nova Senha</h1>
+  <p class="text-sm text-text-secondary">Defina uma nova senha segura</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="max-w-md mx-auto">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-purple-500/25">
+        <i data-lucide="lock" class="w-8 h-8 text-white"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-text-primary">Definir Nova Senha</h2>
+      <p class="text-text-secondary mt-1">Crie uma senha segura para sua conta</p>
+    </div>
+
+    {% if error %}
+      <div class="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400 mb-6">
+        <i data-lucide="alert-circle" class="w-4 h-4 inline mr-1"></i>
+        {{ error }}
+      </div>
+    {% endif %}
+
+    <form class="card card-hover p-6 space-y-4" method="post" action="/auth/reset">
+      <label class="block text-sm">
+        <div class="mb-1 text-text-secondary">Token de Recuperação</div>
+        <input name="token" value="{{ token }}" required placeholder="Cole o token aqui" />
+      </label>
+
+      <label class="block text-sm">
+        <div class="mb-1 text-text-secondary">Nova Senha</div>
+        <input name="password" type="password" minlength="8" required placeholder="Mínimo 8 caracteres" />
+        <p class="text-xs text-text-muted mt-1">Mínimo 8 caracteres</p>
+      </label>
+
+      <button type="submit" class="btn btn-primary w-full">
+        <i data-lucide="save" class="w-4 h-4"></i>
+        Salvar Nova Senha
+      </button>
+    </form>
+
+    <div class="mt-6 text-center text-sm text-text-secondary">
+      <a href="/auth/login" class="text-accent-primary hover:underline flex items-center justify-center gap-1">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        Voltar ao login
+      </a>
+    </div>
+  </div>
+{% endblock %}

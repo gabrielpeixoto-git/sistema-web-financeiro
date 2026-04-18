@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Relatórios</h1>
+  <p class="text-sm text-text-secondary">Análise detalhada das suas finanças</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-text-primary">Relatórios Financeiros</h2>
+      <div class="flex items-center gap-2">
+        <a href="/reports/export.pdf?start={{ start }}&end={{ end }}{% if account_id %}&account_id={{ account_id }}{% endif %}{% if category_id %}&category_id={{ category_id }}{% endif %}" class="btn btn-secondary text-sm" download>
+          <i data-lucide="file-down" class="w-4 h-4"></i>
+          Exportar PDF
+        </a>
+        <a href="/dashboard" class="btn btn-secondary text-sm">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <form class="card card-hover p-6 mb-6" method="get" action="/reports">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+        <i data-lucide="filter" class="w-4 h-4 text-blue-400"></i>
+      </div>
+      <h3 class="font-semibold text-text-primary">Filtros</h3>
+    </div>
+    <div class="grid gap-4 md:grid-cols-6">
+      <label class="text-sm md:col-span-1">
+        <div class="mb-1 text-text-secondary">Início</div>
+        <input name="start" type="date" value="{{ start }}" class="w-full rounded border px-2 py-1" />
+      </label>
+      <label class="text-sm md:col-span-1">
+        <div class="mb-1 text-text-secondary">Fim</div>
+        <input name="end" type="date" value="{{ end }}" class="w-full rounded border px-2 py-1" />
+      </label>
+      <label class="text-sm md:col-span-2">
+        <div class="mb-1 text-text-secondary">Conta</div>
+        <select name="account_id" class="w-full rounded border px-2 py-1">
+          <option value="">Todas as contas</option>
+          {% for acc in accounts %}
+          <option value="{{ acc.id }}" {% if account_id == acc.id %}selected{% endif %}>{{ acc.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="text-sm md:col-span-2">
+        <div class="mb-1 text-text-secondary">Categoria</div>
+        <select name="category_id" class="w-full rounded border px-2 py-1">
+          <option value="">Todas as categorias</option>
+          {% for cat in categories %}
+          <option value="{{ cat.id }}" {% if category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+    <div class="mt-4 flex justify-end">
+      <button type="submit" class="btn btn-primary">
+        <i data-lucide="search" class="w-4 h-4"></i>
+        Aplicar Filtros
+      </button>
+    </div>
+  </form>
+
+  <div class="grid gap-4 md:grid-cols-4 mb-6">
+    <div class="card card-hover kpi-card">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+          <i data-lucide="arrow-down-left" class="w-4 h-4 text-emerald-400"></i>
+        </div>
+        <span class="text-xs text-text-muted uppercase tracking-wider">Receitas</span>
+      </div>
+      <div class="text-2xl font-bold text-emerald-400">{{ income }}</div>
+    </div>
+    <div class="card card-hover kpi-card">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+          <i data-lucide="arrow-up-right" class="w-4 h-4 text-red-400"></i>
+        </div>
+        <span class="text-xs text-text-muted uppercase tracking-wider">Despesas</span>
+      </div>
+      <div class="text-2xl font-bold text-red-400">{{ expense }}</div>
+    </div>
+    <div class="card card-hover kpi-card">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+          <i data-lucide="scale" class="w-4 h-4 text-blue-400"></i>
+        </div>
+        <span class="text-xs text-text-muted uppercase tracking-wider">Resultado</span>
+      </div>
+      <div class="text-2xl font-bold text-blue-400">{{ net }}</div>
+    </div>
+    <div class="card card-hover kpi-card">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+          <i data-lucide="receipt" class="w-4 h-4 text-purple-400"></i>
+        </div>
+        <span class="text-xs text-text-muted uppercase tracking-wider">Lançamentos</span>
+      </div>
+      <div class="text-2xl font-bold text-purple-400">{{ count }}</div>
+    </div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Gráfico de Categorias -->
+    <div class="card card-hover p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+          <i data-lucide="pie-chart" class="w-4 h-4 text-amber-400"></i>
+        </div>
+        <h3 class="font-semibold text-text-primary">Despesas por Categoria</h3>
+      </div>
+      {% if cat_labels %}
+        <div class="h-64">
+          <canvas id="categoryChart" data-labels='{{ cat_labels | tojson }}' data-values='{{ cat_values | tojson }}'></canvas>
+        </div>
+      {% else %}
+        <div class="text-center py-8">
+          <div class="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="pie-chart" class="w-6 h-6 text-text-muted"></i>
+          </div>
+          <p class="text-sm text-text-secondary">Sem dados de categorias no período.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Gráfico de Tendência -->
+    <div class="card card-hover p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+          <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-400"></i>
+        </div>
+        <h3 class="font-semibold text-text-primary">Tendência Mensal</h3>
+      </div>
+      {% if trend_labels %}
+        <div class="h-64">
+          <canvas id="trendChart" data-labels='{{ trend_labels | tojson }}' data-income='{{ trend_income | tojson }}' data-expense='{{ trend_expense | tojson }}'></canvas>
+        </div>
+      {% else %}
+        <div class="text-center py-8">
+          <div class="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="bar-chart-2" class="w-6 h-6 text-text-muted"></i>
+          </div>
+          <p class="text-sm text-text-secondary">Sem dados suficientes para tendência.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Totais por Tipo -->
+  <div class="card card-hover p-6">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+        <i data-lucide="list" class="w-4 h-4 text-purple-400"></i>
+      </div>
+      <h3 class="font-semibold text-text-primary">Totais por Tipo</h3>
+    </div>
+    {% if by_kind %}
+      <ul class="space-y-3">
+        {% for kind, value in by_kind %}
+          <li class="flex items-center justify-between p-3 rounded-xl bg-bg-primary/50">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg {% if 'in' in kind %}bg-emerald-500/20{% else %}bg-red-500/20{% endif %} flex items-center justify-center">
+                <i data-lucide="{% if 'in' in kind %}trending-up{% else %}trending-down{% endif %}" class="w-4 h-4 {% if 'in' in kind %}text-emerald-400{% else %}text-red-400{% endif %}"></i>
+              </div>
+              <span class="text-text-primary">{% if kind == 'in' %}Receita{% elif kind == 'out' %}Despesa{% elif kind == 'transfer' %}Transferência{% else %}{{ kind }}{% endif %}</span>
+            </div>
+            <span class="font-semibold {% if 'in' in kind %}text-emerald-400{% else %}text-red-400{% endif %}">{{ value }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="text-center py-8">
+        <div class="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="inbox" class="w-6 h-6 text-text-muted"></i>
+        </div>
+        <p class="text-sm text-text-secondary">Sem dados no período selecionado.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    // Gráfico de Categorias (Pie)
+    (function() {
+      const catCanvas = document.getElementById('categoryChart');
+      if (catCanvas) {
+        const labels = JSON.parse(catCanvas.dataset.labels || '[]');
+        const values = JSON.parse(catCanvas.dataset.values || '[]');
+        if (labels.length > 0) {
+          new Chart(catCanvas, {
+            type: 'doughnut',
+            data: {
+              labels: labels,
+              datasets: [{
+                data: values,
+                backgroundColor: [
+                  '#EF4444', '#F97316', '#F59E0B', '#10B981',
+                  '#3B82F6', '#8B5CF6', '#EC4899', '#64748B'
+                ],
+                borderWidth: 0
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'right',
+                  labels: { color: '#94A3B8', usePointStyle: true }
+                },
+                tooltip: {
+                  backgroundColor: '#1E293B',
+                  titleColor: '#F1F5F9',
+                  bodyColor: '#94A3B8',
+                  borderColor: '#334155',
+                  borderWidth: 1,
+                  callbacks: {
+                    label: function(context) {
+                      const val = context.parsed;
+                      return 'R$ ' + (val / 100).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+    })();
+
+    // Gráfico de Tendência (Bar)
+    (function() {
+      const trendCanvas = document.getElementById('trendChart');
+      if (trendCanvas) {
+        const labels = JSON.parse(trendCanvas.dataset.labels || '[]');
+        const income = JSON.parse(trendCanvas.dataset.income || '[]');
+        const expense = JSON.parse(trendCanvas.dataset.expense || '[]');
+        if (labels.length > 0) {
+          new Chart(trendCanvas, {
+            type: 'bar',
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: 'Receitas',
+                  data: income,
+                  backgroundColor: '#10B981',
+                  borderRadius: 4
+                },
+                {
+                  label: 'Despesas',
+                  data: expense,
+                  backgroundColor: '#EF4444',
+                  borderRadius: 4
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  labels: { color: '#94A3B8' }
+                },
+                tooltip: {
+                  backgroundColor: '#1E293B',
+                  titleColor: '#F1F5F9',
+                  bodyColor: '#94A3B8',
+                  borderColor: '#334155',
+                  borderWidth: 1,
+                  callbacks: {
+                    label: function(context) {
+                      const val = context.parsed.y;
+                      return context.dataset.label + ': R$ ' + (val / 100).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  grid: { color: 'rgba(51, 65, 85, 0.3)', drawBorder: false },
+                  ticks: { color: '#94A3B8' }
+                },
+                y: {
+                  grid: { color: 'rgba(51, 65, 85, 0.3)', drawBorder: false },
+                  ticks: {
+                    color: '#94A3B8',
+                    callback: function(value) {
+                      return 'R$ ' + (value / 100).toLocaleString('pt-BR', {maximumFractionDigits: 0});
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+    })();
+  </script>
+{% endblock %}

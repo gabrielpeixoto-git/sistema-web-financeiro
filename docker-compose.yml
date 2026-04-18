@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: financas
+      POSTGRES_PASSWORD: financas123
+      POSTGRES_DB: financas
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U financas -d financas"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: python:3.11-slim
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: postgresql+psycopg://financas:financas123@db:5432/financas
+      APP_SECRET_KEY: local-dev-secret-key-32-chars-long
+      PYTHONPATH: /app
+      PYTHONDONTWRITEBYTECODE: 1
+      PYTHONUNBUFFERED: 1
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    working_dir: /app
+    command: >
+      sh -c "pip install -r requirements.txt -q &&
+             python -c 'from financas_app.app.db.engine import get_engine; from sqlmodel import SQLModel; SQLModel.metadata.create_all(get_engine())' &&
+             uvicorn financas_app.app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+volumes:
+  postgres_data:

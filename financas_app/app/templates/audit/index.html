@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Auditoria | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Auditoria</h1>
+  <p class="text-sm text-text-secondary">Registro de eventos e ações</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-text-primary">Registro de Auditoria</h2>
+      <div class="text-sm text-text-secondary">Últimos eventos do sistema</div>
+    </div>
+  </div>
+
+  <div class="card card-hover overflow-hidden">
+    <div class="table-container">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr>
+            <th class="px-4 py-3">Quando (UTC)</th>
+            <th class="px-4 py-3">Ação</th>
+            <th class="px-4 py-3">Entidade</th>
+            <th class="px-4 py-3">Detalhe</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+            <tr>
+              <td class="px-4 py-3 font-mono text-xs text-text-muted">{{ r.created_at.isoformat() }}</td>
+              <td class="px-4 py-3 font-medium text-text-primary">{{ r.action }}</td>
+              <td class="px-4 py-3 text-text-secondary">
+                {% if r.entity %}
+                  <span class="font-mono text-xs">{{ r.entity }}</span>
+                  {% if r.entity_id %}<span class="font-mono text-xs">#{{ r.entity_id }}</span>{% endif %}
+                {% else %}
+                  <span class="text-text-muted">—</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-text-secondary">{{ r.detail or "—" }}</td>
+            </tr>
+          {% endfor %}
+          {% if rows|length == 0 %}
+            <tr>
+              <td class="px-4 py-8 text-center text-text-secondary" colspan="4">
+                <div class="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center mx-auto mb-3">
+                  <i data-lucide="file-text" class="w-6 h-6 text-text-muted"></i>
+                </div>
+                <p>Sem eventos registrados.</p>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
+

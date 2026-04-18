@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Importar CSV | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Importar CSV</h1>
+  <p class="text-sm text-text-secondary">Importe transações em lote via arquivo CSV</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="mb-6">
+    <a href="/transactions" class="btn btn-secondary text-sm">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      Voltar para Transações
+    </a>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2">
+    <!-- Upload Form -->
+    <div class="card card-hover p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+          <i data-lucide="upload" class="w-4 h-4 text-emerald-400"></i>
+        </div>
+        <h3 class="font-semibold text-text-primary">Enviar Arquivo</h3>
+      </div>
+
+      <form id="importForm" enctype="multipart/form-data"
+            hx-post="/transactions/import/preview"
+            hx-target="#importResult"
+            hx-encoding="multipart/form-data">
+        <div class="space-y-4">
+          <label class="text-sm block">
+            <div class="mb-1 text-text-secondary">Arquivo CSV</div>
+            <input type="file" name="file" accept=".csv" required
+                   class="w-full rounded border px-3 py-2 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-emerald-500/20 file:text-emerald-400 hover:file:bg-emerald-500/30" />
+          </label>
+
+          <div class="text-xs text-text-muted bg-bg-tertiary/50 p-3 rounded">
+            <p class="font-medium mb-2">Requisitos do arquivo:</p>
+            <ul class="list-disc list-inside space-y-1">
+              <li>Extensão .csv</li>
+              <li>Codificação UTF-8</li>
+              <li>Separador: vírgula</li>
+              <li>Cabeçalho obrigatório na primeira linha</li>
+            </ul>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full">
+            <i data-lucide="eye" class="w-4 h-4"></i>
+            Pré-visualizar
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- CSV Format Guide -->
+    <div class="card card-hover p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+          <i data-lucide="file-text" class="w-4 h-4 text-blue-400"></i>
+        </div>
+        <h3 class="font-semibold text-text-primary">Formato do CSV</h3>
+      </div>
+
+      <div class="space-y-4 text-sm">
+        <p class="text-text-secondary">Colunas obrigatórias:</p>
+        <div class="bg-bg-tertiary/50 p-3 rounded font-mono text-xs space-y-1">
+          <div><span class="text-emerald-400">date</span> - Data (YYYY-MM-DD)</div>
+          <div><span class="text-emerald-400">kind</span> - Tipo: "in" (receita) ou "out" (despesa)</div>
+          <div><span class="text-emerald-400">account_name</span> - Nome da conta</div>
+          <div><span class="text-emerald-400">category_name</span> - Nome da categoria (opcional)</div>
+          <div><span class="text-emerald-400">amount</span> - Valor (ex: 1.234,56)</div>
+          <div><span class="text-emerald-400">description</span> - Descrição</div>
+        </div>
+
+        <p class="text-text-secondary">Exemplo:</p>
+        <pre class="bg-bg-tertiary/50 p-3 rounded text-xs overflow-x-auto">date,kind,account_name,category_name,amount,description
+2024-01-15,out,Conta Corrente,Alimentação,"45,90",Supermercado
+2024-01-16,in,Conta Corrente,Salário,"5.000,00",Salário Janeiro</pre>
+
+        <div class="flex items-start gap-2 text-xs text-amber-400 bg-amber-500/10 p-3 rounded">
+          <i data-lucide="alert-triangle" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+          <div>
+            <p class="font-medium">Importante:</p>
+            <ul class="list-disc list-inside mt-1 space-y-1">
+              <li>A conta e categoria devem existir no sistema</li>
+              <li>Transações duplicadas (mesma data, conta, valor, descrição) serão ignoradas</li>
+              <li>Use ponto ou vírgula como separador decimal</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Result Container -->
+  <div id="importResult" class="mt-6"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Re-initialize Lucide icons after HTMX swaps
+  document.body.addEventListener('htmx:afterSwap', function() {
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  });
+</script>
+{% endblock %}

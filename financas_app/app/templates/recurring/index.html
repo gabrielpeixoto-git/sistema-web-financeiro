@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Recorrência | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Recorrência</h1>
+  <p class="text-sm text-text-secondary">Automatize lançamentos periódicos</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-text-primary">Regras Recorrentes</h2>
+      <div class="text-sm text-text-secondary flex items-center gap-2">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        <span>Lançamentos materializados: <span class="font-bold text-text-primary">{{ materialized }}</span></span>
+      </div>
+    </div>
+  </div>
+
+  <form class="card card-hover p-6 mb-6" method="post" action="/recurring">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+        <i data-lucide="repeat" class="w-4 h-4 text-purple-400"></i>
+      </div>
+      <h3 class="font-semibold text-text-primary">Nova Regra Recorrente</h3>
+    </div>
+    {% if error %}
+      <div class="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400 mb-4">
+        <i data-lucide="alert-circle" class="w-4 h-4 inline mr-1"></i>
+        {{ error }}
+      </div>
+    {% endif %}
+
+    <div class="grid grid-cols-2 gap-2">
+      <label class="text-sm">
+        <div class="mb-1 text-text-secondary">Tipo</div>
+        <select name="kind" class="w-full">
+          <option value="out">Despesa</option>
+          <option value="in">Receita</option>
+        </select>
+      </label>
+      <label class="text-sm">
+        <div class="mb-1 text-text-secondary">Frequência</div>
+        <select name="frequency" class="w-full">
+          <option value="monthly">Mensal</option>
+          <option value="weekly">Semanal</option>
+          <option value="daily">Diária</option>
+        </select>
+      </label>
+    </div>
+
+    <label class="text-sm block">
+      <div class="mb-1 text-text-secondary">Conta</div>
+      <select name="account_id" class="w-full" required>
+        {% for a in accounts %}
+          <option value="{{ a.id }}">{{ a.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label class="text-sm block">
+      <div class="mb-1 text-text-secondary">Categoria (opcional)</div>
+      <select name="category_id_raw" class="w-full">
+        <option value="">(sem categoria)</option>
+        {% for c in categories %}
+          <option value="{{ c.id }}">{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <div class="grid grid-cols-2 gap-2">
+      <label class="text-sm">
+        <div class="mb-1 text-text-secondary">Valor (ex: 12,34)</div>
+        <input name="amount" required class="w-full" />
+      </label>
+      <label class="text-sm">
+        <div class="mb-1 text-text-secondary">Início</div>
+        <input name="start_on" type="date" value="{{ today }}" required class="w-full" />
+      </label>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2">
+      <label class="text-sm">
+        <div class="mb-1 text-text-secondary">Fim (opcional)</div>
+        <input name="end_on_raw" type="date" class="w-full" />
+      </label>
+      <label class="text-sm">
+        <div class="mb-1 text-text-secondary">Descrição</div>
+        <input name="description" class="w-full" />
+      </label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      <i data-lucide="plus" class="w-4 h-4"></i>
+      Criar Regra
+    </button>
+  </form>
+
+  <div class="card card-hover p-6">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+        <i data-lucide="list-checks" class="w-4 h-4 text-emerald-400"></i>
+      </div>
+      <h3 class="font-semibold text-text-primary">Regras Ativas</h3>
+    </div>
+    <div class="mt-3">
+      {% if rules %}
+        <ul class="space-y-3">
+          {% for r in rules %}
+            <li class="flex items-center justify-between gap-3 p-4 rounded-xl bg-bg-primary/50 hover:bg-bg-primary transition-colors">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg {% if r.kind == 'in' %}bg-emerald-500/20{% else %}bg-red-500/20{% endif %} flex items-center justify-center">
+                  <i data-lucide="{% if r.kind == 'in' %}arrow-down-left{% else %}arrow-up-right{% endif %}" class="w-5 h-5 {% if r.kind == 'in' %}text-emerald-400{% else %}text-red-400{% endif %}"></i>
+                </div>
+                <div>
+                  <div class="font-semibold text-text-primary">{{ r.frequency }} • {{ r.amount }}</div>
+                  <div class="text-sm text-text-secondary">Próxima: {{ r.next_due }}{% if r.end_on %} • até {{ r.end_on }}{% endif %}</div>
+                  {% if r.description %}
+                    <div class="text-xs text-text-muted">{{ r.description }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <form method="post" action="/recurring/{{ r.id }}/off">
+                <button class="btn btn-secondary text-sm" type="submit">
+                  <i data-lucide="power" class="w-4 h-4"></i>
+                  Desativar
+                </button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="text-center py-8">
+          <div class="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="inbox" class="w-6 h-6 text-text-muted"></i>
+          </div>
+          <p class="text-sm text-text-secondary">Nenhuma regra recorrente ativa.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

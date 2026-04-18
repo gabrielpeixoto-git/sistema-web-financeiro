@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Categoria{% endblock %}
+
+{% block content %}
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold">{{ category.name }}</h1>
+      <div class="mt-1 text-sm text-slate-600">Detalhes da categoria</div>
+    </div>
+    <a class="underline text-sm" href="/categories">Voltar</a>
+  </div>
+
+  <div class="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded border bg-white p-4">
+      <div class="text-xs text-slate-500">Receitas</div>
+      <div class="mt-1 text-lg font-semibold">{{ income }}</div>
+    </div>
+    <div class="rounded border bg-white p-4">
+      <div class="text-xs text-slate-500">Despesas</div>
+      <div class="mt-1 text-lg font-semibold">{{ expense }}</div>
+    </div>
+    <div class="rounded border bg-white p-4">
+      <div class="text-xs text-slate-500">Saldo líquido</div>
+      <div class="mt-1 text-lg font-semibold">{{ net }}</div>
+    </div>
+    <div class="rounded border bg-white p-4">
+      <div class="text-xs text-slate-500">Transações</div>
+      <div class="mt-1 text-lg font-semibold">{{ tx_count }}</div>
+    </div>
+  </div>
+
+  <div class="mt-6 rounded border bg-white p-4">
+    <div class="font-medium">Filtro por período</div>
+    {% if error %}
+      <div class="mt-2 text-sm text-red-600">{{ error }}</div>
+    {% endif %}
+    <form method="get" class="mt-3 grid gap-3 md:grid-cols-4">
+      <label class="block text-sm">
+        <div class="mb-1 text-slate-600">Data inicial</div>
+        <input name="start" type="date" value="{{ start }}" class="w-full rounded border px-3 py-2" />
+      </label>
+      <label class="block text-sm">
+        <div class="mb-1 text-slate-600">Data final</div>
+        <input name="end" type="date" value="{{ end }}" class="w-full rounded border px-3 py-2" />
+      </label>
+      <div class="flex items-end gap-2">
+        <button class="rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white" type="submit">
+          Aplicar
+        </button>
+        <a class="rounded border px-3 py-2 text-sm" href="/categories/{{ category.id }}">Limpar</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="mt-6 rounded border bg-white p-4">
+    <div class="font-medium">Transações recentes</div>
+    <div class="mt-3">
+      {% if recent %}
+        <ul class="divide-y text-sm">
+          {% for t in recent %}
+            <li class="flex items-start justify-between gap-4 py-3">
+              <div>
+                <div class="font-medium">{{ t.occurred_on }} — {{ t.kind }}</div>
+                <div class="text-slate-600">{{ t.description }}</div>
+              </div>
+              <div class="font-mono">{{ t.amount }}</div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="text-sm text-slate-600">Sem transações nesta categoria.</div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Metas | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Metas</h1>
+  <p class="text-sm text-text-secondary">Acompanhe seus objetivos financeiros</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-text-primary">Minhas Metas</h2>
+      <a href="/dashboard" class="btn btn-secondary text-sm">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+        Dashboard
+      </a>
+    </div>
+  </div>
+  <p class="mt-2 text-sm text-slate-600">
+    Registre quanto já guardou em direção a cada meta. O progresso é independente das transações nas contas (conferência manual).
+  </p>
+
+  {% if error %}
+    <div class="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400 mb-6">
+      <i data-lucide="alert-circle" class="w-4 h-4 inline mr-1"></i>
+      {{ error }}
+    </div>
+  {% endif %}
+
+  <div class="mt-6 grid gap-6 md:grid-cols-2">
+    <form class="card card-hover p-6 mb-6" method="post" action="/goals">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+          <i data-lucide="target" class="w-4 h-4 text-emerald-400"></i>
+        </div>
+        <h3 class="font-semibold text-text-primary">Nova Meta</h3>
+      </div>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <label class="text-sm block">
+          <div class="mb-1 text-text-secondary">Nome</div>
+          <input name="name" required class="w-full rounded border px-3 py-2" placeholder="Ex.: Reserva de emergência" />
+        </label>
+        <label class="text-sm block">
+          <div class="mb-1 text-text-secondary">Valor alvo (ex: 10.000,00)</div>
+          <input name="target" required class="w-full rounded border px-3 py-2" />
+        </label>
+        <label class="text-sm block">
+          <span class="text-text-secondary">Data limite (opcional)</span>
+          <input name="due_on_raw" type="date" value="{{ today }}" class="mt-1 w-full" />
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Criar Meta
+      </button>
+    </form>
+
+    <div class="space-y-4">
+      {% if rows %}
+        <div class="space-y-4">
+          {% for row in rows %}
+            <div class="card card-hover p-6">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold">
+                    {{ row.name[:1] | upper }}
+                  </div>
+                  <div>
+                    <div class="font-semibold text-text-primary">{{ row.name }}</div>
+                    <div class="text-sm text-text-secondary">Alvo: {{ row.target }}</div>
+                  </div>
+                </div>
+                <span class="badge badge-success">{{ row.percent }}%</span>
+              </div>
+              
+              <div class="mt-3">
+                <div class="flex items-center justify-between text-sm mb-2">
+                  <span class="text-text-secondary">Progresso</span>
+                  <span class="text-text-primary font-semibold">{{ row.saved }} / {{ row.target }}</span>
+                </div>
+                <div class="h-2 w-full rounded-full bg-bg-tertiary overflow-hidden">
+                  <div class="h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500" data-width="{{ row.percent }}"></div>
+                </div>
+              </div>
+              
+              {% if row.due_on %}
+                <div class="mt-3 text-xs text-text-muted flex items-center gap-1">
+                  <i data-lucide="calendar" class="w-3 h-3"></i>
+                  Vence em: {{ row.due_on }}
+                </div>
+              {% endif %}
+              <form method="post" action="/goals/{{ row.goal_id }}/progress" class="mt-3 flex flex-wrap gap-2">
+                <input name="amount" placeholder="+ valor (ex: 100,00)" class="min-w-[8rem] flex-1 rounded border px-2 py-1 text-sm" required />
+                <button type="submit" class="btn btn-secondary text-sm">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                Registrar
+              </button>
+              </form>
+              <form method="post" action="/goals/{{ row.goal_id }}/off" onsubmit="return confirm('Arquivar esta meta?');">
+                <button type="submit" class="text-xs text-text-muted hover:text-text-secondary underline">Arquivar</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-12">
+          <div class="w-16 h-16 rounded-full bg-bg-tertiary flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="target" class="w-8 h-8 text-text-muted"></i>
+          </div>
+          <p class="text-text-secondary">Nenhuma meta ainda.</p>
+          <p class="text-text-muted text-sm mt-1">Crie sua primeira meta acima</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  <script>
+    document.querySelectorAll('[data-width]').forEach(el => {
+      el.style.width = el.dataset.width + '%';
+    });
+  </script>
+{% endblock %}

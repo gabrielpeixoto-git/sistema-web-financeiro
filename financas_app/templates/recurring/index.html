@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Recorrência{% endblock %}
+
+{% block content %}
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-semibold">Recorrência</h1>
+  </div>
+
+  {% if materialized is defined and materialized > 0 %}
+    <p class="mt-2 text-sm text-emerald-800">Gerados {{ materialized }} lançamento(s) em atraso.</p>
+  {% endif %}
+
+  {% if error %}
+    <p class="mt-2 text-sm text-red-700">{{ error }}</p>
+  {% endif %}
+
+  <div class="mt-6 grid gap-6 md:grid-cols-2">
+    <form class="rounded-lg border bg-white p-4 space-y-3" method="post" action="/recurring">
+      <div class="font-medium">Nova regra</div>
+      <p class="text-xs text-slate-600">
+        Gera receitas ou despesas automaticamente (diária, semanal ou mensal). Os vencimentos até hoje são aplicados ao abrir esta página ou Transações/Dashboard.
+      </p>
+
+      <div class="grid grid-cols-2 gap-2">
+        <label class="text-sm">
+          <div class="mb-1 text-slate-700">Tipo</div>
+          <select name="kind" class="w-full rounded border px-3 py-2" required>
+            <option value="out">Despesa</option>
+            <option value="in">Receita</option>
+          </select>
+        </label>
+        <label class="text-sm">
+          <div class="mb-1 text-slate-700">Frequência</div>
+          <select name="frequency" class="w-full rounded border px-3 py-2" required>
+            <option value="monthly">Mensal</option>
+            <option value="weekly">Semanal</option>
+            <option value="daily">Diária</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="text-sm block">
+        <div class="mb-1 text-slate-700">Conta</div>
+        <select name="account_id" class="w-full rounded border px-3 py-2" required>
+          {% for a in accounts %}
+            <option value="{{ a.id }}">{{ a.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="text-sm block">
+        <div class="mb-1 text-slate-700">Categoria (opcional)</div>
+        <select name="category_id" class="w-full rounded border px-3 py-2">
+          <option value="">(sem categoria)</option>
+          {% for c in categories %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <div class="grid grid-cols-2 gap-2">
+        <label class="text-sm">
+          <div class="mb-1 text-slate-700">Primeiro vencimento</div>
+          <input name="start_on" type="date" value="{{ today }}" required class="w-full rounded border px-3 py-2" />
+        </label>
+        <label class="text-sm">
+          <div class="mb-1 text-slate-700">Último vencimento (opcional)</div>
+          <input name="end_on" type="date" class="w-full rounded border px-3 py-2" />
+        </label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <label class="text-sm">
+          <div class="mb-1 text-slate-700">Valor (ex: 12,34)</div>
+          <input name="amount" required class="w-full rounded border px-3 py-2" />
+        </label>
+        <label class="text-sm">
+          <div class="mb-1 text-slate-700">Descrição</div>
+          <input name="description" class="w-full rounded border px-3 py-2" />
+        </label>
+      </div>
+
+      <button class="rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800" type="submit">
+        Salvar regra
+      </button>
+    </form>
+
+    <div class="rounded-lg border bg-white p-4">
+      <div class="font-medium">Regras ativas</div>
+      <div class="mt-3">
+        {% if rules %}
+          <ul class="space-y-3 text-sm">
+            {% for r in rules %}
+              <li class="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
+                <div>
+                  <div class="font-medium">{{ r.next_due }} — {{ r.frequency }} / {{ r.kind }}</div>
+                  <div class="text-slate-600">{{ r.description or "—" }}</div>
+                  {% if r.end_on %}
+                    <div class="text-xs text-slate-500">até {{ r.end_on }}</div>
+                  {% endif %}
+                </div>
+                <div class="text-right">
+                  <div class="font-mono">{{ r.amount }}</div>
+                  <form method="post" action="/recurring/{{ r.id }}/off" class="mt-1">
+                    <button type="submit" class="text-xs text-red-700 underline">Desativar</button>
+                  </form>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="text-sm text-slate-600">Nenhuma regra ativa.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

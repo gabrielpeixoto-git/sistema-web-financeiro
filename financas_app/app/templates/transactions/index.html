@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Transações | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Transações</h1>
+  <p class="text-sm text-text-secondary">Gerencie receitas e despesas</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="flex items-center justify-between mb-6">
+    <div class="text-sm text-text-secondary">Saldo total: <span class="font-bold text-text-primary">{{ total }}</span></div>
+    <div class="flex items-center gap-2">
+      <a href="/api/transactions/export.csv" class="btn btn-secondary text-sm" download>
+        <i data-lucide="download" class="w-4 h-4"></i>
+        Exportar CSV
+      </a>
+      <a href="/transactions/import" class="btn btn-secondary text-sm">
+        <i data-lucide="upload" class="w-4 h-4"></i>
+        Importar
+      </a>
+      <a href="/transactions/new" class="btn btn-primary">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Nova Transação
+      </a>
+    </div>
+  </div>
+
+  <div class="mt-6 grid gap-6 md:grid-cols-2">
+    <div class="space-y-6">
+    <form class="card card-hover p-6 space-y-4" method="post" action="/transactions">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+          <i data-lucide="arrow-down-left" class="w-4 h-4 text-emerald-400"></i>
+        </div>
+        <h3 class="font-semibold text-text-primary">Novo Lançamento</h3>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <label class="text-sm">
+          <div class="mb-1 text-text-secondary">Tipo</div>
+          <select name="kind" class="w-full rounded border px-3 py-2">
+            <option value="out">Despesa</option>
+            <option value="in">Receita</option>
+          </select>
+        </label>
+        <label class="text-sm">
+          <div class="mb-1 text-text-secondary">Data</div>
+          <input name="occurred_on" type="date" value="{{ today }}" required class="w-full rounded border px-3 py-2" />
+        </label>
+      </div>
+
+      <label class="text-sm block">
+        <div class="mb-1 text-text-secondary">Conta</div>
+        <select name="account_id" class="w-full rounded border px-3 py-2" required>
+          {% for a in accounts %}
+            <option value="{{ a.id }}">{{ a.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="text-sm block">
+        <div class="mb-1 text-text-secondary">Categoria (opcional)</div>
+        <select name="category_id" class="w-full rounded border px-3 py-2">
+          <option value="">(sem categoria)</option>
+          {% for c in categories %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <div class="grid grid-cols-2 gap-2">
+        <label class="text-sm">
+          <div class="mb-1 text-text-secondary">Valor (ex: 12,34)</div>
+          <input name="amount" required class="w-full rounded border px-3 py-2" />
+        </label>
+        <label class="text-sm">
+          <div class="mb-1 text-text-secondary">Descrição</div>
+          <input name="description" class="w-full rounded border px-3 py-2" />
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-full">
+        <i data-lucide="save" class="w-4 h-4"></i>
+        Salvar Lançamento
+      </button>
+
+      <div class="text-xs text-text-muted">
+        Dica: crie uma conta em <a href="/accounts" class="text-accent-primary hover:underline">Contas</a> e categorias em
+        <a href="/categories" class="text-accent-primary hover:underline">Categorias</a>.
+      </div>
+    </form>
+
+    <form class="card card-hover p-6 space-y-4" method="post" action="/transactions/transfer">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+          <i data-lucide="repeat" class="w-4 h-4 text-blue-400"></i>
+        </div>
+        <h3 class="font-semibold text-text-primary">Transferência</h3>
+      </div>
+      <p class="text-xs text-text-secondary">
+        Debita a conta de origem e credita a de destino no mesmo valor. Exige saldo suficiente na origem.
+      </p>
+      {% if error %}
+        <div class="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <i data-lucide="alert-circle" class="w-4 h-4 inline mr-1"></i>
+          {{ error }}
+        </div>
+      {% endif %}
+
+      <div class="grid grid-cols-2 gap-2">
+        <label class="text-sm">
+          <div class="mb-1 text-text-secondary">Conta de origem</div>
+          <select name="from_account_id" class="w-full rounded border px-3 py-2" required>
+            {% for a in accounts %}
+              <option value="{{ a.id }}" {% if transfer.from_account_id == a.id %}selected{% endif %}>{{ a.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="text-sm">
+          <div class="mb-1 text-text-secondary">Conta de destino</div>
+          <select name="to_account_id" class="w-full rounded border px-3 py-2" required>
+            {% for a in accounts %}
+              <option value="{{ a.id }}" {% if transfer.to_account_id == a.id %}selected{% endif %}>{{ a.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <label class="text-sm">
+          <div class="mb-1 text-text-secondary">Data</div>
+          <input name="occurred_on" type="date" value="{{ transfer.occurred_on or today }}" required class="w-full rounded border px-3 py-2" />
+        </label>
+        <label class="text-sm">
+          <div class="mb-1 text-text-secondary">Valor (ex: 12,34)</div>
+          <input name="amount" value="{{ transfer.amount or '' }}" required class="w-full rounded border px-3 py-2" />
+        </label>
+      </div>
+
+      <label class="text-sm block">
+        <div class="mb-1 text-text-secondary">Descrição (opcional)</div>
+        <input name="description" value="{{ transfer.description or '' }}" class="w-full rounded border px-3 py-2" />
+      </label>
+
+      <button type="submit" class="btn btn-primary w-full">
+        <i data-lucide="repeat" class="w-4 h-4"></i>
+        Transferir
+      </button>
+    </form>
+    </div>
+
+    <div class="space-y-4">
+      <div class="card card-hover p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+            <i data-lucide="file-up" class="w-4 h-4 text-purple-400"></i>
+          </div>
+          <h3 class="font-semibold text-text-primary">Importar / Exportar CSV</h3>
+        </div>
+        <div id="import-csv-result" class="min-h-0"></div>
+        <div class="mt-4 flex flex-wrap items-end gap-3">
+          <a class="btn btn-secondary" href="/api/transactions/export.csv">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            Exportar CSV
+          </a>
+          <form
+            class="flex flex-wrap items-end gap-3"
+            hx-post="/transactions/import/preview"
+            hx-encoding="multipart/form-data"
+            hx-target="#import-csv-result"
+            hx-swap="innerHTML"
+          >
+            <input type="file" name="file" accept=".csv" required />
+            <button type="submit" class="btn btn-secondary">
+              <i data-lucide="eye" class="w-4 h-4"></i>
+              Pré-visualizar
+            </button>
+          </form>
+        </div>
+        <div class="mt-3 text-xs text-text-muted">
+          Formato esperado: date, kind, account_name, category_name, amount, description
+        </div>
+      </div>
+
+      <div class="card card-hover p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+            <i data-lucide="history" class="w-4 h-4 text-amber-400"></i>
+          </div>
+          <h3 class="font-semibold text-text-primary">Últimos Lançamentos</h3>
+        </div>
+        <div class="mt-3">
+          {% if txs %}
+            <ul class="space-y-3">
+              {% for t in txs %}
+                <li class="flex items-start justify-between gap-4 p-3 rounded-xl bg-bg-primary/50 hover:bg-bg-primary transition-colors">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg {% if t.kind == 'in' %}bg-emerald-500/20{% else %}bg-red-500/20{% endif %} flex items-center justify-center">
+                      <i data-lucide="{% if t.kind == 'in' %}arrow-down-left{% else %}arrow-up-right{% endif %}" class="w-4 h-4 {% if t.kind == 'in' %}text-emerald-400{% else %}text-red-400{% endif %}"></i>
+                    </div>
+                    <div>
+                      <div class="font-medium text-text-primary">{{ t.occurred_on }}</div>
+                      <div class="text-sm text-text-secondary">{{ t.description or 'Sem descrição' }}</div>
+                    </div>
+                  </div>
+                  <div class="font-mono font-semibold {% if t.kind == 'in' %}text-emerald-400{% else %}text-red-400{% endif %}">
+                    {% if t.kind == 'in' %}+{% else %}-{% endif %}{{ t.amount }}
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="text-center py-8">
+              <div class="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center mx-auto mb-3">
+                <i data-lucide="inbox" class="w-6 h-6 text-text-muted"></i>
+              </div>
+              <p class="text-sm text-text-secondary">Nenhuma transação ainda.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

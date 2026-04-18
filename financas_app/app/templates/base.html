@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="pt-br" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Finanças{% endblock %}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+            },
+            colors: {
+              bg: {
+                primary: '#0F172A',
+                secondary: '#1E293B',
+                tertiary: '#334155',
+              },
+              text: {
+                primary: '#F1F5F9',
+                secondary: '#94A3B8',
+                muted: '#64748B',
+              },
+              border: {
+                DEFAULT: '#334155',
+                light: '#475569',
+              },
+              accent: {
+                primary: '#3B82F6',
+                hover: '#2563EB',
+                success: '#10B981',
+                danger: '#EF4444',
+                warning: '#F59E0B',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      * {
+        font-family: 'Inter', system-ui, sans-serif;
+      }
+      
+      body {
+        background: #0F172A;
+        color: #F1F5F9;
+      }
+      
+      /* Sidebar */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 260px;
+        background: #1E293B;
+        border-right: 1px solid #334155;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .sidebar-logo {
+        padding: 24px 20px;
+        border-bottom: 1px solid #334155;
+      }
+      
+      .sidebar-nav {
+        flex: 1;
+        padding: 16px 12px;
+        overflow-y: auto;
+      }
+      
+      .sidebar-footer {
+        padding: 16px 12px;
+        border-top: 1px solid #334155;
+      }
+      
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        color: #94A3B8;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        margin-bottom: 2px;
+      }
+      
+      .nav-item:hover {
+        background: #334155;
+        color: #F1F5F9;
+        transform: translateX(2px);
+      }
+      
+      .nav-item.active {
+        background: #3B82F6;
+        color: #fff;
+      }
+      
+      .nav-item i, .nav-item svg {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+      
+      /* Main Content */
+      .main-wrapper {
+        margin-left: 260px;
+        min-height: 100vh;
+      }
+      
+      .topbar {
+        height: 64px;
+        background: #0F172A;
+        border-bottom: 1px solid #334155;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        position: sticky;
+        top: 0;
+        z-index: 40;
+      }
+      
+      .content-area {
+        padding: 32px;
+        max-width: 1400px;
+      }
+      
+      /* Cards */
+      .card {
+        background: #1E293B;
+        border: 1px solid #334155;
+        border-radius: 14px;
+        transition: all 0.2s ease;
+      }
+      
+      .card-hover:hover {
+        border-color: #475569;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      }
+      
+      .kpi-card {
+        padding: 24px;
+      }
+      
+      .kpi-label {
+        font-size: 13px;
+        color: #94A3B8;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .kpi-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #F1F5F9;
+        margin-top: 8px;
+      }
+      
+      /* Avatar */
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #334155;
+      }
+      
+      .avatar-placeholder {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3B82F6, #2563EB);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+        border: 2px solid #334155;
+      }
+      
+      /* User Menu */
+      .user-menu {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        transition: background 0.2s;
+        text-decoration: none;
+      }
+      
+      .user-menu:hover {
+        background: #334155;
+      }
+      
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: none;
+        text-decoration: none;
+      }
+      
+      .btn-primary {
+        background: #3B82F6;
+        color: white;
+      }
+      
+      .btn-primary:hover {
+        background: #2563EB;
+        transform: translateY(-1px);
+      }
+      
+      .btn-secondary {
+        background: #334155;
+        color: #F1F5F9;
+      }
+      
+      .btn-secondary:hover {
+        background: #475569;
+      }
+      
+      /* Tables */
+      .table-container {
+        overflow-x: auto;
+      }
+      
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      
+      th {
+        text-align: left;
+        padding: 14px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #94A3B8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #334155;
+      }
+      
+      td {
+        padding: 14px 16px;
+        font-size: 14px;
+        color: #F1F5F9;
+        border-bottom: 1px solid #334155;
+      }
+      
+      tr:hover td {
+        background: rgba(51, 65, 85, 0.3);
+      }
+      
+      /* Form Elements */
+      input, select, textarea {
+        background: #0F172A;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 10px 14px;
+        color: #F1F5F9;
+        font-size: 14px;
+        width: 100%;
+        transition: all 0.2s;
+      }
+      
+      input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+      }
+      
+      /* Section Headers */
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      
+      .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #F1F5F9;
+      }
+      
+      /* Status Badges */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+      
+      .badge-success {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10B981;
+      }
+      
+      .badge-danger {
+        background: rgba(239, 68, 68, 0.15);
+        color: #EF4444;
+      }
+      
+      .badge-warning {
+        background: rgba(245, 158, 11, 0.15);
+        color: #F59E0B;
+      }
+      
+      /* Mobile Responsive */
+      @media (max-width: 1024px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+        
+        .sidebar.open {
+          transform: translateX(0);
+        }
+        
+        .main-wrapper {
+          margin-left: 0;
+        }
+        
+        .mobile-menu-btn {
+          display: flex !important;
+        }
+      }
+      
+      .mobile-menu-btn {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: #1E293B;
+        border: 1px solid #334155;
+        color: #F1F5F9;
+        cursor: pointer;
+      }
+      
+      /* Sidebar overlay for mobile */
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 45;
+      }
+      
+      @media (max-width: 1024px) {
+        .sidebar-overlay.active {
+          display: block;
+        }
+      }
+      
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: #0F172A;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 3px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+      }
+      
+      /* ============================================
+         GLOBAL DARK THEME OVERRIDES
+         Força dark theme em todas as páginas
+         ============================================ */
+      
+      /* Sobrescrever classes Tailwind problemáticas */
+      .bg-white, .bg-gray-50, .bg-gray-100, .bg-slate-50, .bg-slate-100 {
+        background-color: #1E293B !important;
+      }
+      
+      .bg-gray-200, .bg-slate-200 {
+        background-color: #334155 !important;
+      }
+      
+      .bg-gray-300, .bg-slate-300 {
+        background-color: #475569 !important;
+      }
+      
+      /* Texto - forçar branco/cinza claro */
+      .text-gray-900, .text-slate-900, .text-black {
+        color: #F1F5F9 !important;
+      }
+      
+      .text-gray-800, .text-slate-800 {
+        color: #E2E8F0 !important;
+      }
+      
+      .text-gray-700, .text-slate-700, .text-gray-600, .text-slate-600 {
+        color: #94A3B8 !important;
+      }
+      
+      .text-gray-500, .text-slate-500 {
+        color: #64748B !important;
+      }
+      
+      /* Bordas */
+      .border, .border-gray-200, .border-slate-200, .border-gray-300, .border-slate-300 {
+        border-color: #334155 !important;
+      }
+      
+      /* Inputs e Forms - CORREÇÃO PRINCIPAL */
+      input[type="text"],
+      input[type="email"],
+      input[type="password"],
+      input[type="number"],
+      input[type="date"],
+      input[type="search"],
+      input[type="tel"],
+      input[type="url"],
+      select,
+      textarea {
+        background-color: #1E293B !important;
+        border: 1px solid #475569 !important;
+        color: #F1F5F9 !important;
+        border-radius: 10px !important;
+        padding: 10px 14px !important;
+      }
+      
+      input::placeholder,
+      textarea::placeholder {
+        color: #64748B !important;
+      }
+      
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #3B82F6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+        outline: none !important;
+      }
+      
+      /* Select dropdown */
+      select option {
+        background-color: #1E293B !important;
+        color: #F1F5F9 !important;
+      }
+      
+      /* Botões de arquivo */
+      input[type="file"] {
+        background-color: #1E293B !important;
+        border: 2px dashed #475569 !important;
+        color: #94A3B8 !important;
+        padding: 20px !important;
+        border-radius: 12px !important;
+        cursor: pointer;
+      }
+      
+      input[type="file"]:hover {
+        border-color: #3B82F6 !important;
+        background-color: #252f47 !important;
+      }
+      
+      /* Botões primários */
+      button[type="submit"],
+      .btn-submit {
+        background: linear-gradient(135deg, #3B82F6, #2563EB) !important;
+        color: white !important;
+        border: none !important;
+        padding: 12px 24px !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        transition: all 0.2s !important;
+      }
+      
+      button[type="submit"]:hover,
+      .btn-submit:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4) !important;
+      }
+      
+      /* Botões secundários */
+      .btn-secondary {
+        background: #334155 !important;
+        color: #F1F5F9 !important;
+        border: 1px solid #475569 !important;
+      }
+      
+      .btn-secondary:hover {
+        background: #475569 !important;
+        border-color: #64748B !important;
+      }
+      
+      /* Botões de perigo */
+      .btn-danger {
+        background: linear-gradient(135deg, #EF4444, #DC2626) !important;
+        color: white !important;
+      }
+      
+      .btn-danger:hover {
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4) !important;
+      }
+      
+      /* Labels e textos de formulário */
+      label {
+        color: #E2E8F0 !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+      }
+      
+      .form-label {
+        color: #E2E8F0 !important;
+        font-weight: 500 !important;
+        margin-bottom: 6px !important;
+        display: block !important;
+      }
+      
+      .form-text,
+      .help-text,
+      small {
+        color: #94A3B8 !important;
+        font-size: 13px !important;
+      }
+      
+      /* Cards e containers */
+      .card, .panel, .box {
+        background: #1E293B !important;
+        border: 1px solid #334155 !important;
+        border-radius: 14px !important;
+      }
+      
+      /* Tabelas */
+      .table-container {
+        background: #1E293B !important;
+        border-radius: 14px !important;
+        border: 1px solid #334155 !important;
+        overflow: hidden;
+      }
+      
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      
+      th {
+        background: #252f47 !important;
+        color: #94A3B8 !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        font-size: 12px !important;
+        letter-spacing: 0.5px !important;
+        padding: 14px 16px !important;
+        text-align: left !important;
+        border-bottom: 1px solid #334155 !important;
+      }
+      
+      td {
+        color: #F1F5F9 !important;
+        padding: 14px 16px !important;
+        border-bottom: 1px solid #334155 !important;
+      }
+      
+      tr:hover td {
+        background: rgba(59, 130, 246, 0.05) !important;
+      }
+      
+      /* Links */
+      a {
+        color: #60A5FA !important;
+      }
+      
+      a:hover {
+        color: #93C5FD !important;
+      }
+      
+      /* Títulos de seção */
+      h1, h2, h3, h4, h5, h6 {
+        color: #F1F5F9 !important;
+      }
+      
+      .section-title {
+        color: #F1F5F9 !important;
+        font-weight: 700 !important;
+        font-size: 24px !important;
+      }
+      
+      /* Dividers */
+      hr, .divider {
+        border-color: #334155 !important;
+      }
+      
+      /* Alertas e mensagens */
+      .alert-error, .text-red-600 {
+        color: #F87171 !important;
+      }
+      
+      .alert-success, .text-green-600 {
+        color: #34D399 !important;
+      }
+      
+      .alert-warning, .text-yellow-600 {
+        color: #FBBF24 !important;
+      }
+      
+      /* Valores monetários */
+      .text-positive, .income {
+        color: #34D399 !important;
+      }
+      
+      .text-negative, .expense {
+        color: #F87171 !important;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <a href="/dashboard" class="flex items-center gap-3 text-xl font-bold text-white">
+          <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+            <i data-lucide="wallet" class="w-5 h-5 text-white"></i>
+          </div>
+          Finanças
+        </a>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <div class="mb-6">
+          <p class="px-3 text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Principal</p>
+          <a href="/dashboard" class="nav-item {% if request.url.path == '/dashboard' %}active{% endif %}">
+            <i data-lucide="layout-dashboard"></i>
+            Dashboard
+          </a>
+          <a href="/transactions" class="nav-item {% if request.url.path == '/transactions' %}active{% endif %}">
+            <i data-lucide="arrow-left-right"></i>
+            Transações
+          </a>
+          <a href="/accounts" class="nav-item {% if request.url.path == '/accounts' %}active{% endif %}">
+            <i data-lucide="credit-card"></i>
+            Contas
+          </a>
+          <a href="/categories" class="nav-item {% if request.url.path == '/categories' %}active{% endif %}">
+            <i data-lucide="tags"></i>
+            Categorias
+          </a>
+        </div>
+        
+        <div class="mb-6">
+          <p class="px-3 text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Planejamento</p>
+          <a href="/recurring" class="nav-item {% if request.url.path == '/recurring' %}active{% endif %}">
+            <i data-lucide="repeat"></i>
+            Recorrência
+          </a>
+          <a href="/budgets" class="nav-item {% if request.url.path == '/budgets' %}active{% endif %}">
+            <i data-lucide="piggy-bank"></i>
+            Orçamentos
+          </a>
+          <a href="/goals" class="nav-item {% if request.url.path == '/goals' %}active{% endif %}">
+            <i data-lucide="target"></i>
+            Metas
+          </a>
+        </div>
+        
+        <div class="mb-6">
+          <p class="px-3 text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Análise</p>
+          <a href="/reports" class="nav-item {% if request.url.path == '/reports' %}active{% endif %}">
+            <i data-lucide="bar-chart-3"></i>
+            Relatórios
+          </a>
+          <a href="/notifications" class="nav-item {% if request.url.path == '/notifications' %}active{% endif %}">
+            <i data-lucide="bell"></i>
+            Notificações
+          </a>
+          {% if request.cookies.get("access_token") %}
+          <a href="/audit" class="nav-item {% if request.url.path == '/audit' %}active{% endif %}">
+            <i data-lucide="shield-check"></i>
+            Auditoria
+          </a>
+          {% endif %}
+        </div>
+      </nav>
+      
+      <div class="sidebar-footer">
+        {% if request.cookies.get("access_token") %}
+        <div class="mb-3">
+          <a href="/account" class="user-menu">
+            {% if user and user.profile_image_url %}
+              <img src="{{ user.profile_image_url }}" alt="" class="avatar">
+            {% elif user %}
+              <div class="avatar-placeholder">{{ user.name[:1] | upper }}</div>
+            {% else %}
+              <div class="avatar-placeholder">?</div>
+            {% endif %}
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-text-primary truncate">{{ user.name if user else 'Usuário' }}</p>
+              <p class="text-xs text-text-secondary truncate">{{ user.email if user else '' }}</p>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-text-secondary"></i>
+          </a>
+        </div>
+        <form method="post" action="/auth/logout">
+          <button type="submit" class="nav-item w-full text-left" style="color: #EF4444;">
+            <i data-lucide="log-out"></i>
+            Sair
+          </button>
+        </form>
+        {% else %}
+        <a href="/auth/login" class="nav-item">
+          <i data-lucide="log-in"></i>
+          Entrar
+        </a>
+        {% endif %}
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-wrapper">
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="flex items-center gap-4">
+          <button class="mobile-menu-btn" onclick="toggleSidebar()">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+          {% block header_title %}{% endblock %}
+        </div>
+        
+        <div class="flex items-center gap-3">
+          {% if request.cookies.get("access_token") %}
+          <a href="/transactions/new" class="btn btn-primary">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            Nova Transação
+          </a>
+          {% endif %}
+        </div>
+      </header>
+      
+      <!-- Content Area -->
+      <main class="content-area">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+
+    <script>
+      // Initialize Lucide Icons
+      lucide.createIcons();
+      
+      // Sidebar toggle for mobile
+      function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+      }
+      
+      function closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+      }
+      
+      // Re-initialize icons after HTMX swaps
+      document.addEventListener('htmx:afterSwap', function() {
+        lucide.createIcons();
+      });
+    </script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

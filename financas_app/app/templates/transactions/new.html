@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Transação{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex items-center justify-between mb-8">
+  <div>
+    <h1 class="text-2xl font-bold text-text-primary">Nova Transação</h1>
+    <p class="text-text-secondary mt-1">Adicione uma nova receita ou despesa</p>
+  </div>
+  <a href="/transactions" class="btn btn-secondary">
+    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    Voltar
+  </a>
+</div>
+
+<!-- Form -->
+<div class="card p-6 max-w-2xl">
+  <form method="post" action="/transactions/" class="space-y-5">
+    <!-- Tipo -->
+    <div>
+      <label class="block text-sm font-medium text-text-primary mb-2">Tipo</label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="cursor-pointer">
+          <input type="radio" name="kind" value="in" class="sr-only peer" checked>
+          <div class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-border bg-bg-primary peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 transition-all">
+            <i data-lucide="arrow-up-circle" class="w-5 h-5 text-emerald-400"></i>
+            <span class="text-sm font-medium text-emerald-400">Receita</span>
+          </div>
+        </label>
+        <label class="cursor-pointer">
+          <input type="radio" name="kind" value="out" class="sr-only peer">
+          <div class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-border bg-bg-primary peer-checked:border-rose-500 peer-checked:bg-rose-500/10 transition-all">
+            <i data-lucide="arrow-down-circle" class="w-5 h-5 text-rose-400"></i>
+            <span class="text-sm font-medium text-rose-400">Despesa</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Conta -->
+    <div>
+      <label class="block text-sm font-medium text-text-primary mb-2">Conta</label>
+      <select name="account_id" required class="w-full">
+        <option value="">Selecione uma conta</option>
+        {% for account in accounts %}
+        <option value="{{ account.id }}">{{ account.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Valor -->
+    <div>
+      <label class="block text-sm font-medium text-text-primary mb-2">Valor (R$)</label>
+      <input type="text" name="amount" placeholder="0,00" required class="w-full" />
+    </div>
+
+    <!-- Data -->
+    <div>
+      <label class="block text-sm font-medium text-text-primary mb-2">Data</label>
+      <input type="date" name="occurred_on" value="{{ today }}" required class="w-full" />
+    </div>
+
+    <!-- Categoria -->
+    <div>
+      <label class="block text-sm font-medium text-text-primary mb-2">Categoria</label>
+      <select name="category_id" class="w-full">
+        <option value="">Sem categoria</option>
+        {% for category in categories %}
+        <option value="{{ category.id }}">{{ category.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Descrição -->
+    <div>
+      <label class="block text-sm font-medium text-text-primary mb-2">Descrição</label>
+      <input type="text" name="description" placeholder="Ex: Salário, Mercado, etc." class="w-full" />
+    </div>
+
+    <!-- Botões -->
+    <div class="flex gap-3 pt-4">
+      <button type="submit" class="btn btn-primary flex-1">
+        <i data-lucide="check" class="w-4 h-4"></i>
+        Salvar Transação
+      </button>
+      <a href="/transactions" class="btn btn-secondary">
+        Cancelar
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

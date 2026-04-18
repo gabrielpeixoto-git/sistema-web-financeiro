@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Login | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Entrar</h1>
+  <p class="text-sm text-text-secondary">Acesse sua conta</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="max-w-md mx-auto">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/25">
+        <i data-lucide="wallet" class="w-8 h-8 text-white"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-text-primary">Bem-vindo de volta</h2>
+      <p class="text-text-secondary mt-1">Entre para gerenciar suas finanças</p>
+    </div>
+
+    {% if msg %}
+      <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400 mb-6">
+        <i data-lucide="alert-circle" class="w-4 h-4 inline mr-1"></i>
+        {{ msg }}
+      </div>
+    {% endif %}
+
+    <form class="card card-hover p-6 space-y-4" method="post" action="/auth/login">
+      <label class="block text-sm">
+        <div class="mb-1 text-text-secondary">Email</div>
+        <input name="email" type="email" required placeholder="seu@email.com" class="w-full rounded border px-3 py-2" />
+      </label>
+
+      <label class="block text-sm">
+        <div class="mb-1 text-text-secondary">Senha</div>
+        <input name="password" type="password" required placeholder="••••••••" class="w-full rounded border px-3 py-2" />
+      </label>
+
+      <button type="submit" class="btn btn-primary w-full rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">
+        <i data-lucide="log-in" class="w-4 h-4"></i>
+        Entrar
+      </button>
+    </form>
+
+    <div class="mt-6 text-center text-sm text-text-secondary space-y-2">
+      <p>Sem conta? <a href="/auth/register" class="text-accent-primary hover:underline font-medium">Criar conta gratuita</a></p>
+      <p><a href="/auth/forgot" class="text-text-muted hover:text-text-secondary underline">Esqueci minha senha</a></p>
+    </div>
+  </div>
+{% endblock %}

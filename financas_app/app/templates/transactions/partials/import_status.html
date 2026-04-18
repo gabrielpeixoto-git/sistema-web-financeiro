@@ -1,0 +1,41 @@
+<div
+  class="mt-3 rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-100"
+  {% if poll %}
+    hx-get="/transactions/import-status/{{ task_id }}"
+    hx-trigger="every 900ms"
+    hx-swap="outerHTML"
+  {% endif %}
+>
+  {% if status in ["pending", "running"] %}
+    <div class="font-medium">Processando importação…</div>
+    <p class="mt-1 text-xs text-slate-600 dark:text-slate-300">Aguarde enquanto as linhas do CSV são validadas e gravadas.</p>
+  {% elif status == "done" %}
+    <div class="font-medium text-emerald-800 dark:text-emerald-200">Importação concluída</div>
+    <ul class="mt-2 space-y-1 text-xs text-slate-700 dark:text-slate-200">
+      <li><span class="font-medium">Incluídas:</span> {{ created }}</li>
+      <li><span class="font-medium">Ignoradas:</span> {{ skipped }}</li>
+    </ul>
+    {% if skip_rows %}
+      <p class="mt-2 text-xs font-medium text-slate-600 dark:text-slate-300">Motivos das linhas ignoradas:</p>
+      <ul class="mt-1 list-disc pl-5 text-xs">
+        {% for label, n in skip_rows %}
+          <li>{{ label }}: {{ n }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% if skip_sample_rows %}
+      <p class="mt-2 text-xs font-medium text-slate-600 dark:text-slate-300">Exemplos (linha do arquivo → motivo):</p>
+      <ul class="mt-1 list-disc pl-5 text-xs font-mono">
+        {% for line_no, label in skip_sample_rows %}
+          <li>Linha {{ line_no }}: {{ label }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% elif status == "error" %}
+    <div class="font-medium text-rose-800 dark:text-rose-200">Erro ao processar</div>
+    <p class="mt-1 text-xs">{{ error_detail }}</p>
+  {% else %}
+    <div class="font-medium text-amber-800 dark:text-amber-100">Status</div>
+    <p class="mt-1 text-xs">{{ error_detail }}</p>
+  {% endif %}
+</div>

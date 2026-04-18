@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Email Enviado | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Email Enviado</h1>
+  <p class="text-sm text-text-secondary">Verifique sua caixa de entrada</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="max-w-md mx-auto text-center">
+    <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/25">
+      <i data-lucide="mail-check" class="w-8 h-8 text-white"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-text-primary mb-4">Verifique seu email</h2>
+    <div class="card card-hover p-6 mb-6">
+      <p class="text-text-secondary">{{ message }}</p>
+    </div>
+    <a href="/auth/login" class="btn btn-primary">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      Voltar ao login
+    </a>
+  </div>
+{% endblock %}

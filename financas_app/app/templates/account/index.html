@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Minha Conta | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Minha Conta</h1>
+  <p class="text-sm text-text-secondary">Gerencie suas configurações</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="max-w-2xl mx-auto">
+    {% if msg %}
+      <div class="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400 mb-6">
+        <i data-lucide="check-circle" class="w-4 h-4 inline mr-1"></i>
+        {{ msg }}
+      </div>
+    {% endif %}
+
+    <!-- Perfil -->
+    <div class="card card-hover p-6 mb-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+          <i data-lucide="user" class="w-4 h-4 text-blue-400"></i>
+        </div>
+        <h3 class="font-semibold text-text-primary">Perfil</h3>
+      </div>
+
+      <div class="flex items-center gap-4 mb-6">
+        {% if user.profile_image_url %}
+          <img src="{{ user.profile_image_url }}" alt="Foto de perfil" class="w-16 h-16 rounded-full object-cover border-2 border-border" />
+        {% else %}
+          <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl border-2 border-border">
+            {{ user.name[:1] | upper }}
+          </div>
+        {% endif %}
+        <div>
+          <p class="font-semibold text-text-primary">{{ user.name }}</p>
+          <p class="text-sm text-text-secondary">{{ user.email }}</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-3 mb-6">
+        <form method="post" action="/account/upload-profile" enctype="multipart/form-data" class="flex items-center gap-2">
+          <input type="file" name="file" accept="image/*" />
+          <button type="submit" class="btn btn-secondary text-sm">
+            <i data-lucide="upload" class="w-4 h-4"></i>
+            Enviar foto
+          </button>
+        </form>
+        {% if user.profile_image_url %}
+          <form method="post" action="/account/remove-profile">
+            <button type="submit" class="btn btn-danger text-sm">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+              Remover
+            </button>
+          </form>
+        {% endif %}
+      </div>
+
+      <!-- Timezone -->
+      <div class="mb-6">
+        <label class="text-xs font-medium uppercase tracking-wide text-text-muted">Timezone</label>
+        <form class="mt-1 flex items-center gap-2" method="post" action="/account/timezone">
+          <input name="timezone" value="{{ user.timezone }}" placeholder="Ex: America/Sao_Paulo" />
+          <button type="submit" class="btn btn-primary text-sm">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            Salvar
+          </button>
+        </form>
+        <div class="mt-2 text-xs text-text-muted">
+          Use nomes IANA (ex.: <span class="font-mono">UTC</span>, <span class="font-mono">America/Sao_Paulo</span>).
+        </div>
+      </div>
+
+      <!-- Email Reminders -->
+      <div>
+        <label class="text-xs font-medium uppercase tracking-wide text-text-muted">Lembretes por Email</label>
+        <form class="mt-1 flex items-center justify-between" method="post" action="/account/email-reminders">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="email_reminders" name="enabled" value="true" {% if user.email_reminders_enabled %}checked{% endif %} />
+            <label for="email_reminders" class="text-sm text-text-secondary">
+              Receber lembretes de contas a pagar por email
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary text-sm">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            Salvar
+          </button>
+        </form>
+        <div class="mt-2 text-xs text-text-muted">
+          Você receberá lembretes {{""}} dias antes do vencimento (se SMTP estiver configurado).
+        </div>
+      </div>
+    </div>
+
+    <!-- Dados Técnicos -->
+    <div class="card card-hover p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-lg bg-slate-500/20 flex items-center justify-center">
+          <i data-lucide="info" class="w-4 h-4 text-slate-400"></i>
+        </div>
+        <h3 class="font-semibold text-text-primary">Dados Técnicos</h3>
+      </div>
+      <div class="text-sm text-text-secondary">
+        ID do usuário: <span class="font-mono text-text-primary">{{ user.id }}</span>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Criar conta</h1>
+  <p class="text-sm text-text-secondary">Comece a controlar suas finanças</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="max-w-md mx-auto">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/25">
+        <i data-lucide="user-plus" class="w-8 h-8 text-white"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-text-primary">Crie sua conta</h2>
+      <p class="text-text-secondary mt-1">É gratuito e leva menos de 1 minuto</p>
+    </div>
+
+    {% if msg %}
+      <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400 mb-6">
+        <i data-lucide="alert-circle" class="w-4 h-4 inline mr-1"></i>
+        {{ msg }}
+      </div>
+    {% endif %}
+
+    <form class="card card-hover p-6 space-y-4" method="post" action="/auth/register">
+      <label class="block text-sm">
+        <div class="mb-1 text-text-secondary">Nome completo</div>
+        <input name="name" required placeholder="Seu nome" />
+      </label>
+
+      <label class="block text-sm">
+        <div class="mb-1 text-text-secondary">Email</div>
+        <input name="email" type="email" required placeholder="seu@email.com" />
+      </label>
+
+      <label class="block text-sm">
+        <div class="mb-1 text-text-secondary">Senha</div>
+        <input name="password" type="password" minlength="8" required placeholder="Mínimo 8 caracteres" />
+        <p class="text-xs text-text-muted mt-1">Mínimo 8 caracteres</p>
+      </label>
+
+      <button type="submit" class="btn btn-primary w-full">
+        <i data-lucide="user-plus" class="w-4 h-4"></i>
+        Criar Conta
+      </button>
+    </form>
+
+    <div class="mt-6 text-center text-sm text-text-secondary">
+      Já tem conta? <a href="/auth/login" class="text-accent-primary hover:underline font-medium">Entrar</a>
+    </div>
+  </div>
+{% endblock %}

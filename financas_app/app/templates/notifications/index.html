@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Notificações | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Notificações</h1>
+  <p class="text-sm text-text-secondary">Acompanhe alertas e atualizações</p>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="mb-8">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <h2 class="text-2xl font-bold text-text-primary">Suas Notificações</h2>
+      <div class="flex items-center gap-3">
+        <form method="post" action="/notifications/read_all">
+          <input type="hidden" name="kind" value="{{ kind }}" />
+          <button class="btn btn-secondary text-sm">
+            <i data-lucide="check-double" class="w-4 h-4"></i>
+            Marcar todas lidas
+          </button>
+        </form>
+        <form method="post" action="/notifications/generate">
+          <button class="btn btn-primary text-sm">
+            <i data-lucide="bell-plus" class="w-4 h-4"></i>
+            Gerar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Reminders -->
+  <div class="card card-hover p-6 mb-6">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+        <i data-lucide="mail" class="w-4 h-4 text-emerald-400"></i>
+      </div>
+      <h3 class="font-semibold text-text-primary">Lembretes por Email</h3>
+    </div>
+    <div class="flex items-center justify-between">
+      <div class="text-sm text-text-secondary">
+        {% if user.email_reminders_enabled %}
+          <span class="text-emerald-400 flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            Ativado - você receberá lembretes de contas a pagar
+          </span>
+        {% else %}
+          <span class="text-text-muted">Desativado</span>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-2">
+        <form method="post" action="/notifications/send-email-reminder">
+          <button class="btn btn-secondary text-sm">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            Testar Envio
+          </button>
+        </form>
+        <a href="/account" class="btn btn-primary text-sm">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+          Configurar
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-hover p-6 mb-6">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+        <i data-lucide="filter" class="w-4 h-4 text-blue-400"></i>
+      </div>
+      <h3 class="font-semibold text-text-primary">Filtrar por Tipo</h3>
+    </div>
+    <form method="get" action="/notifications" class="flex items-center gap-3">
+      <select name="kind" class="flex-1" onchange="this.form.submit()">
+        <option value="" {% if not kind %}selected{% endif %}>Todas as notificações</option>
+        {% for k in kinds %}
+          <option value="{{ k }}" {% if kind == k %}selected{% endif %}>{{ k }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+
+  <div class="card card-hover p-6">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+        <i data-lucide="inbox" class="w-4 h-4 text-amber-400"></i>
+      </div>
+      <h3 class="font-semibold text-text-primary">Lista de Notificações</h3>
+    </div>
+    {% if rows %}
+      <ul class="space-y-3">
+        {% for n in rows %}
+          <li class="p-4 rounded-xl {% if not n.read_at %}bg-bg-primary/70 border border-accent-primary/20{% else %}bg-bg-primary/30{% endif %} hover:bg-bg-primary/50 transition-colors">
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <div class="flex items-center gap-2">
+                {% if not n.read_at %}
+                  <span class="w-2 h-2 rounded-full bg-accent-primary"></span>
+                {% endif %}
+                <span class="text-xs font-medium text-accent-primary">{{ n.kind }}</span>
+                <span class="text-xs text-text-muted">— {{ n.created_at }}</span>
+              </div>
+              {% if not n.read_at %}
+                <form method="post" action="/notifications/{{ n.id }}/read">
+                  <button class="text-xs text-accent-primary hover:underline" type="submit">
+                    Marcar como lida
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+            <div class="text-sm text-text-primary">{{ n.message }}</div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="text-center py-8">
+        <div class="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="bell-off" class="w-6 h-6 text-text-muted"></i>
+        </div>
+        <p class="text-sm text-text-secondary">Sem notificações.</p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+

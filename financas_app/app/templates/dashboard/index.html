@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Finanças{% endblock %}
+
+{% block header_title %}
+<div>
+  <h1 class="text-xl font-semibold text-text-primary">Dashboard</h1>
+  <p class="text-sm text-text-secondary">Visão geral das suas finanças</p>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Header com saudação -->
+<div class="mb-8">
+  <h2 class="text-2xl font-bold text-text-primary">
+    Olá, {{ user.name | default('Usuário') }} 👋
+  </h2>
+  <p class="text-text-secondary mt-1">Aqui está o resumo das suas finanças de hoje</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <!-- Saldo Total -->
+  <div class="card card-hover kpi-card">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+        <i data-lucide="wallet" class="w-5 h-5 text-blue-400"></i>
+      </div>
+      <span class="badge badge-success">+12.5%</span>
+    </div>
+    <p class="kpi-label">Saldo Atual</p>
+    <p class="kpi-value text-blue-400">{{ balance }}</p>
+  </div>
+  
+  <!-- Receitas -->
+  <div class="card card-hover kpi-card">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+        <i data-lucide="arrow-down-left" class="w-5 h-5 text-emerald-400"></i>
+      </div>
+      <span class="text-xs text-text-secondary">Este mês</span>
+    </div>
+    <p class="kpi-label">Receitas</p>
+    <p class="kpi-value text-emerald-400">{{ income }}</p>
+  </div>
+  
+  <!-- Despesas -->
+  <div class="card card-hover kpi-card">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+        <i data-lucide="arrow-up-right" class="w-5 h-5 text-red-400"></i>
+      </div>
+      <span class="text-xs text-text-secondary">Este mês</span>
+    </div>
+    <p class="kpi-label">Despesas</p>
+    <p class="kpi-value text-red-400">{{ expense }}</p>
+  </div>
+  
+  <!-- Transações -->
+  <div class="card card-hover kpi-card">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+        <i data-lucide="receipt" class="w-5 h-5 text-purple-400"></i>
+      </div>
+      <span class="text-xs text-text-secondary">Total</span>
+    </div>
+    <p class="kpi-label">Lançamentos</p>
+    <p class="kpi-value text-purple-400">{{ tx_count }}</p>
+  </div>
+</div>
+
+<!-- Gráfico Principal + Seções -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+  <!-- Gráfico de Evolução -->
+  <div class="card p-6 lg:col-span-2">
+    <div class="section-header">
+      <div>
+        <h3 class="section-title">Evolução do Saldo</h3>
+        <p class="text-sm text-text-secondary mt-1">Últimos 6 meses</p>
+      </div>
+      <a href="/reports" class="btn btn-secondary text-sm">
+        <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+        Ver relatório completo
+      </a>
+    </div>
+    <div class="h-72">
+      <canvas id="balanceChart" data-labels='{{ chart_labels | tojson }}' data-values='{{ chart_data | tojson }}'></canvas>
+    </div>
+  </div>
+  
+  <!-- Contribuição por Categoria -->
+  <div class="card p-6">
+    <div class="section-header">
+      <h3 class="section-title">Por Categoria</h3>
+      <a href="/categories" class="text-sm text-accent-primary hover:underline">
+        Ver todas
+      </a>
+    </div>
+    
+    {% if categories %}
+    <div class="space-y-4">
+      {% for name, value in categories[:5] %}
+      <div class="flex items-center justify-between p-3 rounded-xl bg-bg-primary/50">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center">
+            <i data-lucide="tag" class="w-4 h-4 text-text-secondary"></i>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-text-primary">{{ name }}</p>
+            <p class="text-xs text-text-secondary">{{ value }}</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-semibold {% if value.startswith('-') %}text-red-400{% else %}text-emerald-400{% endif %}">
+            {{ value }}
+          </p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-8">
+      <div class="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center mx-auto mb-3">
+        <i data-lucide="pie-chart" class="w-6 h-6 text-text-muted"></i>
+      </div>
+      <p class="text-sm text-text-secondary">Sem dados de categorias</p>
+      <a href="/categories" class="text-sm text-accent-primary hover:underline mt-2 inline-block">
+        Criar categorias
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <!-- Nova Transação -->
+  <a href="/transactions/new" class="card card-hover p-6 group">
+    <div class="flex items-start justify-between">
+      <div>
+        <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4 group-hover:bg-blue-500/30 transition-colors">
+          <i data-lucide="plus-circle" class="w-6 h-6 text-blue-400"></i>
+        </div>
+        <h4 class="font-semibold text-text-primary mb-1">Nova Transação</h4>
+        <p class="text-sm text-text-secondary">Registrar receita ou despesa</p>
+      </div>
+      <i data-lucide="arrow-right" class="w-5 h-5 text-text-muted group-hover:text-accent-primary transition-colors"></i>
+    </div>
+  </a>
+  
+  <!-- Transferência -->
+  <a href="/transactions/transfer" class="card card-hover p-6 group">
+    <div class="flex items-start justify-between">
+      <div>
+        <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4 group-hover:bg-purple-500/30 transition-colors">
+          <i data-lucide="repeat" class="w-6 h-6 text-purple-400"></i>
+        </div>
+        <h4 class="font-semibold text-text-primary mb-1">Transferência</h4>
+        <p class="text-sm text-text-secondary">Mover entre contas</p>
+      </div>
+      <i data-lucide="arrow-right" class="w-5 h-5 text-text-muted group-hover:text-accent-primary transition-colors"></i>
+    </div>
+  </a>
+  
+  <!-- Importar -->
+  <a href="/transactions/import" class="card card-hover p-6 group">
+    <div class="flex items-start justify-between">
+      <div>
+        <div class="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-4 group-hover:bg-emerald-500/30 transition-colors">
+          <i data-lucide="upload" class="w-6 h-6 text-emerald-400"></i>
+        </div>
+        <h4 class="font-semibold text-text-primary mb-1">Importar CSV</h4>
+        <p class="text-sm text-text-secondary">Importar transações em lote</p>
+      </div>
+      <i data-lucide="arrow-right" class="w-5 h-5 text-text-muted group-hover:text-accent-primary transition-colors"></i>
+    </div>
+  </a>
+</div>
+
+<script>
+// Gráfico de Evolução do Saldo
+(function() {
+  const canvas = document.getElementById('balanceChart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const months = JSON.parse(canvas.dataset.labels || '[]');
+  const balanceData = JSON.parse(canvas.dataset.values || '[]');
+
+  if (months.length === 0) return;
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Saldo',
+        data: balanceData,
+        borderColor: '#3B82F6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#3B82F6',
+        pointBorderColor: '#1E293B',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: '#1E293B',
+          titleColor: '#F1F5F9',
+          bodyColor: '#94A3B8',
+          borderColor: '#334155',
+          borderWidth: 1,
+          padding: 12,
+          displayColors: false,
+          callbacks: {
+            label: function(context) {
+              return 'R$ ' + context.parsed.y.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              });
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: {
+            color: 'rgba(51, 65, 85, 0.5)',
+            drawBorder: false,
+          },
+          ticks: {
+            color: '#94A3B8'
+          }
+        },
+        y: {
+          grid: {
+            color: 'rgba(51, 65, 85, 0.5)',
+            drawBorder: false,
+          },
+          ticks: {
+            color: '#94A3B8',
+            callback: function(value) {
+              return 'R$ ' + (value / 1000).toFixed(1) + 'k';
+            }
+          }
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      }
+    }
+  });
+})();
+</script>
+{% endblock %}
