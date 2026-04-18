@@ -264,7 +264,11 @@ MIT License - veja [LICENSE](LICENSE) para detalhes.
 
 ## Autor
 
-Desenvolvido com para gestão financeira pessoal eficiente.
+**Gabriel Azambuja Peixoto**
+
+Desenvolvedor Python focado em aplicações web e automação.
+
+- GitHub: https://github.com/gabrielpeixoto-git
 
 ---
 
