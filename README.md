@@ -188,11 +188,12 @@ python -m financas_app.cli send-email-reminders
 
 ## Capturas de Tela
 
-| Dashboard | Relatórios | Transações |
-|-----------|------------|------------|
-| Visão geral com gráficos | Filtros e exportação PDF | CRUD e importação CSV |
+<img width="1902" height="947" alt="Captura de tela_18-4-2026_13038_localhost"
+src="https://github.com/user-attachments/assets/b0b50f67-c6e6-4e07-aa0c-32a53689342a" />
 
----
+<img width="1794" height="975" alt="Captura de tela_18-4-2026_1340_localhost" src="https://github.com/user-attachments/assets/376acdf9-c23a-45f9-a452-112955cdcc8e" />
+
+<img width="1794" height="889" alt="Captura de tela_18-4-2026_13419_localhost" src="https://github.com/user-attachments/assets/f1782655-3d5f-4c1c-a6ff-490b8ccb6c9b" />
 
 ## Funcionalidades Detalhadas
 
